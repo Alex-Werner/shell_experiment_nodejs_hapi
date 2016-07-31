@@ -1,0 +1,106 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+    <style>
+        body{
+            margin: 0; padding: 0;
+            font-family: Inconsolata, monospace;
+            color: white;
+            background: -webkit-radial-gradient(center center, contain, rgba(0,150,0,1), black) center center no-repeat, black;
+            /* background: -webkit-radial-gradient(center 75%, contain, rgba(0,75,0,0.8), black) center center no-repeat, black; */
+            -webkit-background-size: 110% 100%;
+        }
+        .screen_tty{
+            height: calc(100vh - 25px);
+            width: 99vw;
+        }
+        .input_line{
+            display: inline-block;
+            height:25px;
+            width: 99vw;
+        }
+        .prompt_symbol{
+            width:20px;
+            display: inline-block;
+        }
+        .prompt_input{
+            width: calc(80vw - 20px);
+            display: inline-block;
+            color: green;
+            border: 0;
+            background: none;
+        }
+    </style>
+    
+</head>
+<body>
+    <div class="screen_tty" id="screen_tty">
+        
+    </div>
+    <div class="input_line">
+        <div class="prompt_symbol">$></div>
+        <input class="prompt_input" id="prompt_input"/>
+    </div>
+
+
+
+    <script>
+        CMDRequest = function(command){
+          var callback = function(response){
+              var screenTTY = document.getElementById("screen_tty");
+              screenTTY.innerHTML = screenTTY.innerHTML + "<br>"+
+                              "<code>"+
+                      JSON.parse(response).resCmd
+              +"</code>";
+          };  
+          POSTRequest('http://192.168.1.31:8000/term_cmd',command, callback);
+        };
+        
+        POSTRequest=function(url,postData, callback){
+
+            var http = new XMLHttpRequest();
+            http.open("POST", url, true);
+
+            http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+//            http.setRequestHeader("Content-length", postData.length);
+
+            http.onreadystatechange = function() {//Call a function when the state changes.
+                if(http.readyState == 4 && http.status == 200) {
+                    
+                    callback(http.responseText);
+                }
+            };
+            http.send(postData);
+            
+        };
+    </script>
+    <script>
+        var promptInput = document.getElementById("prompt_input");
+        var screenTTY = document.getElementById("screen_tty");
+        
+        promptInput      
+                .addEventListener("keydown", function(event) {
+//                    event.preventDefault();
+                    if (event.keyCode == 13) {
+                        var value = promptInput.value;
+                        promptInput.value = "";
+                        
+                        screenTTY.innerHTML = screenTTY.innerHTML + "<br>"+
+                                "Hal@node-term:~$"+value;
+                        
+                        var response = CMDRequest("command="+value);
+                        
+//                        screenTTY.innerHTML = screenTTY.innerHTML + "<br>"+
+//                        response;
+                        
+                        
+                        
+                        console.log('enter', value);
+                    }
+                });
+
+        
+    </script>
+</body>
+</html>
